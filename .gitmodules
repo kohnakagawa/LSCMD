@@ -1,0 +1,3 @@
+[submodule "sample/mdstep"]
+	path = sample/mdstep
+	url = git@github.com:kohnakagawa/mdstep.git
