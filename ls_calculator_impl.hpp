@@ -14,18 +14,15 @@ namespace LocalStress {
     typedef Vec<T> Vec_t;
     typedef Tensor<T> Tensor_t;
 
-    Tensor_t stress_tot_;
     std::vector<Tensor_t> stress_dist_;
     std::unique_ptr<Boundary<T>> boundary_;
     int32_t num_frames_ = 0;
 
     void normalizeStress() {
       const auto cell_volume = boundary_->cell_volume();
-      const T factor = 1.0 / (num_frames_ * cell_volume);
+      const T factor = -1.0 / (num_frames_ * cell_volume);
       std::for_each(stress_dist_.begin(), stress_dist_.end(),
-                    [factor] (Tensor_t& val) {
-                      val *= factor;
-                    });
+                    [factor](Tensor_t& val) { val *= factor; });
     }
 
     void spreadLocalStress(const Vec_t& r1,
@@ -34,9 +31,7 @@ namespace LocalStress {
       const auto div_ratios = boundary_->getDividedLineRatio(r1, dr01);
       const auto d_virial = tensor_dot(dr01, dF01);
       for (auto it = div_ratios.cbegin(); it != div_ratios.cend(); ++it) {
-        const auto d_virial_loc = d_virial * it->second;
-        stress_dist_[it->first] += d_virial_loc;
-        stress_tot_ += d_virial_loc;
+        stress_dist_[it->first] += d_virial * it->second;
       }
     }
 
@@ -95,22 +90,23 @@ namespace LocalStress {
                             const Vec_t& v,
                             const T mass) {
       if (boundary_->isInBox(r)) {
-        const auto kin_term = tensor_dot(v, v) * mass;
-        stress_tot_ += kin_term;
-        stress_dist_[boundary_->getCellPositionHash(r)] += kin_term;
+        stress_dist_[boundary_->getCellPositionHash(r)] += tensor_dot(v, v) * mass;
       } else {
         ERR("r should be placed in box.");
       }
     }
 
-    void nextStep() {
-      num_frames_++;
-      stress_tot_.clear();
+    void nextStep() { num_frames_++; }
+    void clear() {
+      num_frames_ = 0;
+      std::for_each(stress_dist_.begin(), stress_dist_.end(),
+                    [](Tensor_t& t) { t.clear(); });
     }
 
-    const Tensor_t& stress_tot() {
-      stress_tot_ /= boundary_->box_volume();
-      return stress_tot_;
+    const Tensor_t pressure_tot() const {
+      return std::accumulate(stress_dist_.cbegin(),
+                             stress_dist_.cend(),
+                             Tensor_t(0.0)) / (boundary_->box_volume() * num_frames_);
     }
 
     // TODO: support big endian
