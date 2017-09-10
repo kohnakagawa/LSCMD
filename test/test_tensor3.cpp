@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
-#include "../ls_calculator.hpp"
+#include "../tensor3.hpp"
 
-using namespace LS;
+using namespace LocalStress;
 
 typedef Tensor3<double> dtensor;
 typedef Vector3<double> dvec3;
