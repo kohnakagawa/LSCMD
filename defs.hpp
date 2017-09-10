@@ -1,9 +1,9 @@
 #if !defined DEFS_HPP
 #define DEFS_HPP
 
-#define SIMULATION_3D
+#define LS_SIMULATION_3D
 
-#ifdef SIMULATION_3D
+#ifdef LS_SIMULATION_3D
 #include "tensor3.hpp"
 
 namespace LocalStress {

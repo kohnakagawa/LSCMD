@@ -69,7 +69,9 @@ namespace LocalStress {
         break;
       case BoundaryType::PERIODIC_Z:
         if (D != 3) { ERR("This periodic boundary type is only valid for 3D simulation."); }
+#ifdef LS_SIMULATION_3D
         is_periodic_axis_[Z] = true;
+#endif
         break;
       case BoundaryType::PERIODIC_XY:
         is_periodic_axis_[X] = true;
@@ -78,18 +80,24 @@ namespace LocalStress {
       case BoundaryType::PERIODIC_YZ:
         if (D != 3) { ERR("This periodic boundary type is only valid for 3D simulation."); }
         is_periodic_axis_[Y] = true;
+#ifdef LS_SIMULATION_3D
         is_periodic_axis_[Z] = true;
+#endif
         break;
       case BoundaryType::PERIODIC_ZX:
         if (D != 3) { ERR("This periodic boundary type is only valid for 3D simulation."); }
-        is_periodic_axis_[Z] = true;
         is_periodic_axis_[X] = true;
+#ifdef LS_SIMULATION_3D
+        is_periodic_axis_[Z] = true;
+#endif
         break;
       case BoundaryType::PERIODIC_XYZ:
         if (D != 3) { ERR("This periodic boundary type is only valid for 3D simulation."); }
         is_periodic_axis_[X] = true;
         is_periodic_axis_[Y] = true;
+#ifdef LS_SIMULATION_3D
         is_periodic_axis_[Z] = true;
+#endif
         break;
       case BoundaryType::FIXED:
         break;
@@ -114,6 +122,7 @@ namespace LocalStress {
       for (int32_t i = D - 2; i >= 0; i--) {
         hash = hash * mesh_dim_[i] + idx[i];
       }
+      assert((hash >= 0) && (hash < number_of_cell_));
       return hash;
     }
 
