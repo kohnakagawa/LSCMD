@@ -2,6 +2,7 @@
 #define VECTOR2_HPP
 
 #include <iostream>
+#include <cmath>
 #include <cassert>
 #include <initializer_list>
 #include "utils.hpp"
@@ -38,6 +39,25 @@ namespace LocalStress {
 
     void clear(void) {
       x = y = 0.0;
+    }
+
+    T norm2(void) const {
+      return x*x + y*y;
+    }
+
+    T norm(void) const {
+      return std::sqrt(norm2());
+    }
+
+    void normalize(void) {
+      const auto r = norm();
+      x /= r;
+      y /= r;
+    }
+
+    friend Vector2 normalize(const Vector2& rhs) {
+      const auto r = rhs.norm();
+      return rhs / r;
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Vector2 vec) {

@@ -42,11 +42,11 @@ namespace LocalStress {
       x = y = z = 0.0;
     }
 
-    double norm2(void) const {
+    T norm2(void) const {
       return x*x + y*y + z*z;
     }
 
-    double norm(void) const {
+    T norm(void) const {
       return std::sqrt(norm2());
     }
 
@@ -99,8 +99,8 @@ namespace LocalStress {
       return *this;                                                     \
     }
     DEFINE_OP_FUNCS1(*)
-      DEFINE_OP_FUNCS1(/)
-      };
+    DEFINE_OP_FUNCS1(/)
+  };
 
 #undef DEFINE_OP_FUNCS0
 #undef DEFINE_OP_FUNCS1

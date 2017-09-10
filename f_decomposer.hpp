@@ -36,8 +36,8 @@ namespace LocalStress {
 
     constexpr int nrows = 12, ncols = 6, nrhs = 1;
 
-    std::array<double, nrows * ncols> D;
-    std::array<double, nrows> b;
+    std::array<T, nrows * ncols> D;
+    std::array<T, nrows> b;
     }*/
 
 #undef DECOMPOSE_FORCE_FUNC

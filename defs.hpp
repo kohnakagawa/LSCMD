@@ -13,7 +13,7 @@ namespace LocalStress {
   template <typename T>
   using Tensor = Tensor3<T>;
 
-  enum : std::size_t {X, Y, Z, D};
+  enum : int32_t {X, Y, Z, D};
 }
 
 #else
@@ -26,7 +26,7 @@ namespace LocalStress {
   template <typename T>
   using Tensor = Tensor2<T>;
 
-  enum : std::size_t {X, Y, D};
+  enum : int32_t {X, Y, D};
 }
 
 #endif

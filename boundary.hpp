@@ -34,22 +34,19 @@ namespace LocalStress {
     Vec_t low_, high_, box_length_, box_hlength_;
     T box_volume_;
     Vec_t mesh_length_, imesh_length_;
-    T cell_volume_;
     std::array<int32_t, D> mesh_dim_;
     int32_t number_of_cell_ = -1;
 
     void calcMeshLengthFromMeshDim(void) {
-      cell_volume_ = 1.0;
-      for (std::size_t i = 0; i < D; i++) {
+      for (int32_t i = 0; i < D; i++) {
         mesh_length_[i]  = box_length_[i] / T(mesh_dim_[i]);
         imesh_length_[i] = 1.0 / mesh_length_[i];
-        cell_volume_ *= mesh_length_[i];
       }
     }
 
     void calcNumberOfCell(void) {
       number_of_cell_ = std::accumulate(mesh_dim_.cbegin(), mesh_dim_.cend(), 1,
-                                        [] (const int32_t acc, const int32_t rhs) {
+                                        [](const int32_t acc, const int32_t rhs) {
                                           return acc * rhs;
                                         });
     }
@@ -58,7 +55,7 @@ namespace LocalStress {
       box_length_  = high_ - low_;
       box_hlength_ = box_length_ * 0.5;
       box_volume_ = 1.0;
-      for (std::size_t i = 0; i < D; i++) box_volume_ *= box_length_[i];
+      for (int32_t i = 0; i < D; i++) box_volume_ *= box_length_[i];
     }
 
     void setPeriodicAxis(void) {
@@ -122,13 +119,13 @@ namespace LocalStress {
 
     std::array<int32_t, D> getCellPosition(const Vec_t& pos) const {
       std::array<int32_t, D> idx;
-      for (std::size_t i = 0; i < D; i++) {
+      for (int32_t i = 0; i < D; i++) {
         idx[i] = int32_t(std::floor((pos[i] - low_[i]) * imesh_length_[i]));
       }
       return idx;
     }
 
-    void calcDividedLineRatioOneAxis(std::vector<double>& ratios,
+    void calcDividedLineRatioOneAxis(std::vector<T>& ratios,
                                      const T dx,
                                      const T x_org,
                                      const int32_t axis,
@@ -151,32 +148,30 @@ namespace LocalStress {
 
   public:
     Boundary(BoundaryType type,
-             const std::array<int32_t, D> mdim) : btype_(type) {
-      mesh_dim_ = mdim;
+             const std::array<int32_t, D> mdim) : btype_(type), mesh_dim_(mdim) {
       setPeriodicAxis();
       calcNumberOfCell();
     }
 
     void setBox(const Vec_t& v0, const Vec_t& v1) {
-      for (std::size_t i = 0; i < D; i++) assert(v0[i] < v1[i]);
+      for (int32_t i = 0; i < D; i++) assert(v0[i] < v1[i]);
       low_  = v0;
       high_ = v1;
       calcBoxLength();
       calcMeshLengthFromMeshDim();
     }
 
-    const Vec_t& low() const { return low_; }
-    const Vec_t& high() const { return high_; }
-    const Vec_t& mesh_length() const { return mesh_length_; }
-    T cell_volume() const { return cell_volume_; }
-    T box_volume() const { return box_volume_; }
+    const Vec_t& low(void) const { return low_; }
+    const Vec_t& high(void) const { return high_; }
+    const Vec_t& mesh_length(void) const { return mesh_length_; }
+    T box_volume(void) const { return box_volume_; }
 
-    const Vec_t& box_length() const { return box_length_; }
-    const std::array<int32_t, D>& mesh_dim() const { return mesh_dim_; }
-    int32_t number_of_cell() const { return number_of_cell_; }
+    const Vec_t& box_length(void) const { return box_length_; }
+    const std::array<int32_t, D>& mesh_dim(void) const { return mesh_dim_; }
+    int32_t number_of_cell(void) const { return number_of_cell_; }
 
     void applyMinimumImage(Vec_t& dr01) const {
-      for (std::size_t i = 0; i < D; i++) {
+      for (int32_t i = 0; i < D; i++) {
         if (is_periodic_axis_[i]) {
           if (dr01[i] < -box_hlength_[i]) dr01[i] += box_length_[i];
           if (dr01[i] >  box_hlength_[i]) dr01[i] -= box_length_[i];
@@ -185,7 +180,7 @@ namespace LocalStress {
     }
 
     void adjustBoundary(Vec_t& pos) const {
-      for (std::size_t i = 0; i < D; i++) {
+      for (int32_t i = 0; i < D; i++) {
         if (is_periodic_axis_[i]) {
           if (pos[i] < low_[i] ) pos[i] += box_length_[i];
           if (pos[i] > high_[i]) pos[i] -= box_length_[i];
@@ -195,7 +190,7 @@ namespace LocalStress {
 
     bool isInBox(const Vec_t& pos) const {
       bool in_range = true;
-      for (std::size_t i = 0; i < D; i++) {
+      for (int32_t i = 0; i < D; i++) {
         in_range &= (pos[i] >= low_[i]) && (pos[i] < high_[i]);
       }
       return in_range;
@@ -213,7 +208,7 @@ namespace LocalStress {
 
       std::vector<T> ratios;
       ratios.push_back(0.0);
-      for (std::size_t axis = 0; axis < D; axis++) {
+      for (int32_t axis = 0; axis < D; axis++) {
         calcDividedLineRatioOneAxis(ratios, dr01[axis], r1[axis], axis,
                                     cell_pos1[axis], cell_pos0[axis] - cell_pos1[axis]);
       }

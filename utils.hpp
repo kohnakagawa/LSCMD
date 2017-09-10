@@ -27,7 +27,7 @@ namespace LocalStress {
   template <class T>
   using remove_const_t = typename std::remove_const<T>::type;
 
-  bool is_little_endian() {
+  bool is_little_endian(void) {
     union {
       int16_t s;
       int8_t  c[2];

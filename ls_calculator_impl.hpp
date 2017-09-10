@@ -19,8 +19,7 @@ namespace LocalStress {
     int32_t num_frames_ = 0;
 
     void normalizeStress() {
-      const auto cell_volume = boundary_->cell_volume();
-      const T factor = -1.0 / (num_frames_ * cell_volume);
+      const T factor = -1.0 / num_frames_;
       std::for_each(stress_dist_.begin(), stress_dist_.end(),
                     [factor](Tensor_t& val) { val *= factor; });
     }
@@ -44,7 +43,7 @@ namespace LocalStress {
       boundary_->setBox(box_low, box_high);
       stress_dist_.resize(boundary_->number_of_cell());
     }
-    ~LSCalculator() {
+    ~LSCalculator(void) {
       saveLocalStressDist();
     }
 
@@ -62,7 +61,7 @@ namespace LocalStress {
         boundary_->applyMinimumImage(dr01);
         spreadLocalStress(r1, dr01, F01);
       } else {
-        ERR("r0 and r1 should be placed in box.");
+        ERR("r0 and r1 should be in simulation box.");
       }
     }
 
@@ -82,7 +81,7 @@ namespace LocalStress {
         spreadLocalStress(r2, dr12, dF[1]);
         spreadLocalStress(r0, dr20, dF[2]);
       } else {
-        ERR("r0, r1, and r2 should be placed in box.");
+        ERR("r0, r1, and r2 should be in simulation box.");
       }
     }
 
@@ -92,18 +91,18 @@ namespace LocalStress {
       if (boundary_->isInBox(r)) {
         stress_dist_[boundary_->getCellPositionHash(r)] += tensor_dot(v, v) * mass;
       } else {
-        ERR("r should be placed in box.");
+        ERR("r should be in simulation box.");
       }
     }
 
-    void nextStep() { num_frames_++; }
-    void clear() {
+    void nextStep(void) { num_frames_++; }
+    void clear(void) {
       num_frames_ = 0;
       std::for_each(stress_dist_.begin(), stress_dist_.end(),
                     [](Tensor_t& t) { t.clear(); });
     }
 
-    const Tensor_t pressure_tot() const {
+    const Tensor_t pressure_tot(void) const {
       return std::accumulate(stress_dist_.cbegin(),
                              stress_dist_.cend(),
                              Tensor_t(0.0)) / (boundary_->box_volume() * num_frames_);
@@ -114,10 +113,20 @@ namespace LocalStress {
       normalizeStress();
       const std::string fname = (filesystem::path(dir_name) / filesystem::path("local_stress.bin")).filename();
       std::ofstream fout(fname, std::ios::binary);
-      const auto& mdim = boundary_->mesh_dim();
+
+      const auto sim_dim = D;
+      const auto& box_low = boundary_->low();
+      const auto& box_len = boundary_->box_length();
+      const auto& mdim    = boundary_->mesh_dim();
       if (is_little_endian()) {
+        fout.write(reinterpret_cast<const char*>(&sim_dim),
+                   sizeof(uint32_t));
+        fout.write(reinterpret_cast<const char*>(&box_low.x),
+                   sizeof(Vec_t));
+        fout.write(reinterpret_cast<const char*>(&box_len.x),
+                   sizeof(Vec_t));
         fout.write(reinterpret_cast<const char*>(mdim.data()),
-                   sizeof(remove_const_t<remove_reference_t<decltype(mdim)>>));
+                   sizeof(std::array<int32_t, D>));
         fout.write(reinterpret_cast<const char*>(&stress_dist_[0].xx),
                    stress_dist_.size() * sizeof(Tensor_t));
       } else {
@@ -125,7 +134,7 @@ namespace LocalStress {
       }
     }
 
-    void saveLocalStressDist() {
+    void saveLocalStressDist(void) {
       saveLocalStressDist("./");
     }
   };
