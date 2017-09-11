@@ -5,11 +5,10 @@ A local stress calculation library for molecular dynamics simulations written in
 
 ## Supported methods
 * Irving-Kirkwood-Noll procedure for pairwise forces.
-* Central Force Decomposition (CFD) for three-body forces.
+* Central Force Decomposition (CFD) for 3,4 body forces.
 
-## Feature
-Header only library.
-You can easily use this library by including ls_calculator.hpp
+## Dependency
+* [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page)
 
 ## Examples
 ### Example 1
