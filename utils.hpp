@@ -8,7 +8,9 @@
 #define LOCAL_STRESS_CONCATENATE(x, y) x ## y
 #define LOCAL_STRESS_CONCAT(x, y) LOCAL_STRESS_CONCATENATE(x, y)
 
-#define ERR(msg)                                                        \
+#define LOCAL_STRESS_UNUSED_VAR(x) (void) x
+
+#define LOCAL_STRESS_ERR(msg)                                                        \
   do {                                                                  \
     std::cerr << "Error occurs at " << __FILE__ << ":" << __LINE__ << std::endl; \
     std::cerr << msg << std::endl;                                      \

@@ -29,6 +29,10 @@ namespace LocalStress {
       return *this;
     }
 
+    const Vector2 operator - () const {
+      return Vector2(-x, -y);
+    }
+
     T& operator [] (const int i) {
       return (&x)[i];
     }

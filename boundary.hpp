@@ -68,7 +68,7 @@ namespace LocalStress {
         is_periodic_axis_[Y] = true;
         break;
       case BoundaryType::PERIODIC_Z:
-        if (D != 3) { ERR("This periodic boundary type is only valid for 3D simulation."); }
+        if (D != 3) { LOCAL_STRESS_ERR("This periodic boundary type is only valid for 3D simulation."); }
 #ifdef LS_SIMULATION_3D
         is_periodic_axis_[Z] = true;
 #endif
@@ -78,21 +78,21 @@ namespace LocalStress {
         is_periodic_axis_[Y] = true;
         break;
       case BoundaryType::PERIODIC_YZ:
-        if (D != 3) { ERR("This periodic boundary type is only valid for 3D simulation."); }
+        if (D != 3) { LOCAL_STRESS_ERR("This periodic boundary type is only valid for 3D simulation."); }
         is_periodic_axis_[Y] = true;
 #ifdef LS_SIMULATION_3D
         is_periodic_axis_[Z] = true;
 #endif
         break;
       case BoundaryType::PERIODIC_ZX:
-        if (D != 3) { ERR("This periodic boundary type is only valid for 3D simulation."); }
+        if (D != 3) { LOCAL_STRESS_ERR("This periodic boundary type is only valid for 3D simulation."); }
         is_periodic_axis_[X] = true;
 #ifdef LS_SIMULATION_3D
         is_periodic_axis_[Z] = true;
 #endif
         break;
       case BoundaryType::PERIODIC_XYZ:
-        if (D != 3) { ERR("This periodic boundary type is only valid for 3D simulation."); }
+        if (D != 3) { LOCAL_STRESS_ERR("This periodic boundary type is only valid for 3D simulation."); }
         is_periodic_axis_[X] = true;
         is_periodic_axis_[Y] = true;
 #ifdef LS_SIMULATION_3D
@@ -102,7 +102,7 @@ namespace LocalStress {
       case BoundaryType::FIXED:
         break;
       default:
-        ERR("Unknown boundary type.");
+        LOCAL_STRESS_ERR("Unknown boundary type.");
         break;
       }
     }
