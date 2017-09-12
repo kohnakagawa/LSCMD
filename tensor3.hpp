@@ -107,6 +107,16 @@ namespace LocalStress {
       yx = yy = yz = 0.0;
       zx = zy = zz = 0.0;
     }
+
+    T trace(void) const {
+      return xx + yy + zz;
+    }
+
+    T det(void) const {
+      return xx * (yy * zz - yz * zy)
+        - xy * (yx * zz - yz * zx)
+        + xz * (yx * zy - yy * zx);
+    }
   };
 
   template <typename T>

@@ -93,6 +93,14 @@ namespace LocalStress {
       xx = xy = 0.0;
       yx = yy = 0.0;
     }
+
+    T trace(void) const {
+      return xx + yy;
+    }
+
+    T det(void) const {
+      return xx * yy - xy * yx;
+    }
   };
 
   template <typename T>
