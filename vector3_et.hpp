@@ -312,37 +312,82 @@ namespace LocalStress {
       return ost;
     }
 
-    template <class L, class R>
-      friend Expression<L, typename Ops<T>::Add, R, T> operator + (const L& lhs, const R& rhs) {
-      return Expression<L, typename Ops<T>::Add, R, T>(lhs, rhs);
+#define DEFINE_OP_FUNCS0(OP, OP_NAME)                                   \
+    friend Expression<Vector3,                                          \
+                      typename OP_NAME,                                 \
+                      Vector3,                                          \
+                      T>                                                \
+      operator OP (const Vector3& lhs, const Vector3& rhs) {            \
+      return Expression<Vector3, typename OP_NAME, Vector3, T>(lhs, rhs); \
+    }                                                                   \
+                                                                        \
+    template <class LL, class OPL, class RL, class LR, class OPR, class RR> \
+      friend Expression<Expression<LL, OPL, RL, T>,                     \
+                        typename OP_NAME,                               \
+                        Expression<LR, OPR, RR, T>,                     \
+                        T>                                              \
+      operator OP (const Expression<LL, OPL, RL, T>& lhs,               \
+                   const Expression<LR, OPR, RR, T>& rhs) {             \
+      return Expression<Expression<LL, OPL, RL, T>, typename OP_NAME, Expression<LR, OPR, RR, T>, T>(lhs, rhs); \
+    }
+    DEFINE_OP_FUNCS0(+, Ops<T>::Add)
+    DEFINE_OP_FUNCS0(-, Ops<T>::Sub)
+    DEFINE_OP_FUNCS0(^, Ops<T>::Cross)
+#undef DEFINE_OP_FUNCS0
+
+    friend Expression<Vector3,
+                      typename Ops<T>::Dot,
+                      Vector3,
+                      T>
+    operator * (const Vector3& lhs, const Vector3& rhs) {
+      return Expression<Vector3, typename Ops<T>::Dot, Vector3, T>(lhs, rhs);
     }
 
-    template <class L, class R>
-      friend Expression<L, typename Ops<T>::Sub, R, T> operator - (const L& lhs, const R& rhs) {
-      return Expression<L, typename Ops<T>::Sub, R, T>(lhs, rhs);
+#define DEFINE_OP_FUNCS1(OP, OP_NAME)                                   \
+    friend Expression<T,                                                \
+                      typename OP_NAME,                                 \
+                      Vector3,                                          \
+                      T>                                                \
+      operator OP (const T& lhs, const Vector3& rhs) {                  \
+      return Expression<T, typename OP_NAME, Vector3, T>(lhs, rhs);     \
+    }                                                                   \
+                                                                        \
+    friend Expression<Vector3,                                          \
+                      typename OP_NAME,                                 \
+                      T,                                                \
+                      T>                                                \
+      operator OP (const Vector3& lhs, const T& rhs) {                  \
+      return Expression<Vector3, typename OP_NAME, T, T>(lhs, rhs);     \
+    }                                                                   \
+                                                                        \
+    friend Expression<Scalar<T>,                                        \
+                      typename OP_NAME,                                 \
+                      Vector3,                                          \
+                      T>                                                \
+      operator OP (const Scalar<T>& lhs, const Vector3& rhs) {          \
+      return Expression<Scalar<T>, typename OP_NAME, Vector3, T>(lhs, rhs); \
+    }                                                                   \
+                                                                        \
+    friend Expression<Vector3,                                          \
+                      typename OP_NAME,                                 \
+                      Scalar<T>,                                        \
+                      T>                                                \
+      operator OP (const Vector3& lhs, const Scalar<T>& rhs) {          \
+      return Expression<Vector3, typename OP_NAME, Scalar<T>, T>(lhs, rhs); \
+    }                                                                   \
+                                                                        \
+    template <class LL, class OPL, class RL, class LR, class OPR, class RR> \
+      friend Expression<Expression<LL, OPL, RL, T>,                     \
+                        typename OP_NAME,                               \
+                        Expression<LR, OPR, RR, T>,                     \
+                        T>                                              \
+      operator OP (const Expression<LL, OPL, RL, T>& lhs,               \
+                   const Expression<LR, OPR, RR, T>& rhs) {             \
+      return Expression<Expression<LL, OPL, RL, T>, typename OP_NAME, Expression<LR, OPR, RR, T>, T>(lhs, rhs); \
     }
-
-    template <class L, class R>
-      friend Expression<L, typename Ops<T>::Mul, R, T> operator * (const L& lhs, const R& rhs) {
-      return Expression<L, typename Ops<T>::Mul, R, T>(lhs, rhs);
-    }
-
-    template <class L, class R>
-      friend Expression<L, typename Ops<T>::Div, R, T> operator / (const L& lhs, const R& rhs) {
-      return Expression<L, typename Ops<T>::Div, R, T>(lhs, rhs);
-    }
-
-    // inner product
-    template <class L, class R>
-      friend Expression<L, typename Ops<T>::Dot, R, T> dot(const L& lhs, const R& rhs) {
-      return Expression<L, typename Ops<T>::Dot, R, T>(lhs, rhs);
-    }
-
-    // cross product
-    template <class L, class R>
-      friend Expression<L, typename Ops<T>::Cross, R, T> operator ^ (const L& lhs, const R& rhs) {
-      return Expression<L, typename Ops<T>::Cross, R, T>(lhs, rhs);
-    }
+    DEFINE_OP_FUNCS1(*, Ops<T>::Mul)
+    DEFINE_OP_FUNCS1(/, Ops<T>::Div)
+#undef DEFINE_OP_FUNCS1
 
     template <class E>
       friend Vector3 normalize(const E& rhs) {
