@@ -18,6 +18,9 @@ target_link_libraries(vector3_test_et gtest_main gtest pthread)
 add_executable(vector2_test test_vector2.cpp)
 target_link_libraries(vector2_test gtest_main gtest pthread)
 
+add_executable(vector2_test_et test_vector2_et.cpp)
+target_link_libraries(vector2_test_et gtest_main gtest pthread)
+
 add_executable(tensor3_test test_tensor3.cpp)
 target_link_libraries(tensor3_test gtest_main gtest pthread)
 
