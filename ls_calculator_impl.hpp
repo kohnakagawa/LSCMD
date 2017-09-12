@@ -28,7 +28,7 @@ namespace LocalStress {
                            const Vec_t& dr01,
                            const Vec_t& dF01) {
       const auto div_ratios = boundary_->getDividedLineRatio(r1, dr01);
-      const auto d_virial = tensor_dot(dr01, dF01);
+      const auto d_virial   = tensor_dot(dr01, dF01);
       for (auto it = div_ratios.cbegin(); it != div_ratios.cend(); ++it) {
         stress_dist_[it->first] += d_virial * it->second;
       }
@@ -52,7 +52,6 @@ namespace LocalStress {
     LSCalculator& operator = (const LSCalculator&) = delete;
     LSCalculator& operator = (LSCalculator&&) = delete;
 
-    // TODO: support optimized version of this function
     void calcLocalStressPot2(const Vec_t& r0,
                              const Vec_t& r1,
                              const Vec_t& F0,
@@ -60,15 +59,22 @@ namespace LocalStress {
       LOCAL_STRESS_UNUSED_VAR(F1);
       if (boundary_->isInBox(r0) &&
           boundary_->isInBox(r1)) {
-        auto dr01 = r0 - r1;
-        boundary_->applyMinimumImage(dr01);
-        spreadLocalStress(r1, dr01, F0);
+        calcLocalStressPot2NoCheck(r0, r1, F0, F1);
       } else {
         LOCAL_STRESS_ERR("r0 and r1 should be in simulation box.");
       }
     }
 
-    // TODO: support optimized version of this function
+    void calcLocalStressPot2NoCheck(const Vec_t& r0,
+                                    const Vec_t& r1,
+                                    const Vec_t& F0,
+                                    const Vec_t& F1) {
+      LOCAL_STRESS_UNUSED_VAR(F1);
+      auto dr01 = r0 - r1;
+      boundary_->applyMinimumImage(dr01);
+      spreadLocalStress(r1, dr01, F0);
+    }
+
     void calcLocalStressPot3(const Vec_t& r0,
                              const Vec_t& r1,
                              const Vec_t& r2,
@@ -78,19 +84,27 @@ namespace LocalStress {
       if (boundary_->isInBox(r0) &&
           boundary_->isInBox(r1) &&
           boundary_->isInBox(r2)) {
-        auto dr01 = r0 - r1; boundary_->applyMinimumImage(dr01);
-        auto dr12 = r1 - r2; boundary_->applyMinimumImage(dr12);
-        auto dr20 = r2 - r0; boundary_->applyMinimumImage(dr20);
-        const auto dF = decomposeForce({F0, F1, F2}, {dr01, dr12, dr20});
-        spreadLocalStress(r1, dr01, dF[0]);
-        spreadLocalStress(r2, dr12, dF[1]);
-        spreadLocalStress(r0, dr20, dF[2]);
+        calcLocalStressPot3NoCheck(r0, r1, r2, F0, F1, F2);
       } else {
         LOCAL_STRESS_ERR("r0, r1, and r2 should be in simulation box.");
       }
     }
 
-    // TODO: support optimized version of this function
+    void calcLocalStressPot3NoCheck(const Vec_t& r0,
+                                    const Vec_t& r1,
+                                    const Vec_t& r2,
+                                    const Vec_t& F0,
+                                    const Vec_t& F1,
+                                    const Vec_t& F2) {
+      auto dr01 = r0 - r1; boundary_->applyMinimumImage(dr01);
+      auto dr12 = r1 - r2; boundary_->applyMinimumImage(dr12);
+      auto dr20 = r2 - r0; boundary_->applyMinimumImage(dr20);
+      const auto dF = decomposeForce({F0, F1, F2}, {dr01, dr12, dr20});
+      spreadLocalStress(r1, dr01, dF[0]);
+      spreadLocalStress(r2, dr12, dF[1]);
+      spreadLocalStress(r0, dr20, dF[2]);
+    }
+
     void calcLocalStressPot4(const Vec_t& r0,
                              const Vec_t& r1,
                              const Vec_t& r2,
@@ -103,22 +117,33 @@ namespace LocalStress {
           boundary_->isInBox(r1) &&
           boundary_->isInBox(r2) &&
           boundary_->isInBox(r3)) {
-        auto dr01 = r0 - r1; boundary_->applyMinimumImage(dr01);
-        auto dr02 = r0 - r2; boundary_->applyMinimumImage(dr02);
-        auto dr03 = r0 - r3; boundary_->applyMinimumImage(dr03);
-        auto dr12 = r1 - r2; boundary_->applyMinimumImage(dr12);
-        auto dr13 = r1 - r3; boundary_->applyMinimumImage(dr13);
-        auto dr23 = r2 - r3; boundary_->applyMinimumImage(dr23);
-        const auto dF = decomposeForce({F0, F1, F2, F3}, {dr01, dr02, dr03, dr12, dr13, dr23});
-        spreadLocalStress(r1, dr01, dF[0]);
-        spreadLocalStress(r2, dr02, dF[1]);
-        spreadLocalStress(r3, dr03, dF[2]);
-        spreadLocalStress(r2, dr12, dF[3]);
-        spreadLocalStress(r3, dr13, dF[4]);
-        spreadLocalStress(r3, dr23, dF[5]);
+        calcLocalStressPot4NoCheck(r0, r1, r2, r3, F0, F1, F2, F3);
       } else {
         LOCAL_STRESS_ERR("r0, r1, and r2 should be in simulation box.");
       }
+    }
+
+    void calcLocalStressPot4NoCheck(const Vec_t& r0,
+                                    const Vec_t& r1,
+                                    const Vec_t& r2,
+                                    const Vec_t& r3,
+                                    const Vec_t& F0,
+                                    const Vec_t& F1,
+                                    const Vec_t& F2,
+                                    const Vec_t& F3) {
+      auto dr01 = r0 - r1; boundary_->applyMinimumImage(dr01);
+      auto dr02 = r0 - r2; boundary_->applyMinimumImage(dr02);
+      auto dr03 = r0 - r3; boundary_->applyMinimumImage(dr03);
+      auto dr12 = r1 - r2; boundary_->applyMinimumImage(dr12);
+      auto dr13 = r1 - r3; boundary_->applyMinimumImage(dr13);
+      auto dr23 = r2 - r3; boundary_->applyMinimumImage(dr23);
+      const auto dF = decomposeForce({F0, F1, F2, F3}, {dr01, dr02, dr03, dr12, dr13, dr23});
+      spreadLocalStress(r1, dr01, dF[0]);
+      spreadLocalStress(r2, dr02, dF[1]);
+      spreadLocalStress(r3, dr03, dF[2]);
+      spreadLocalStress(r2, dr12, dF[3]);
+      spreadLocalStress(r3, dr13, dF[4]);
+      spreadLocalStress(r3, dr23, dF[5]);
     }
 
     void calcLocalStressKin(const Vec_t& r,

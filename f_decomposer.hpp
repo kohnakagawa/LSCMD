@@ -1,8 +1,8 @@
 #if !defined F_DECOMPOSER_HPP
 #define F_DECOMPOSER_HPP
 
-#include "Eigen/Core"
-#include "Eigen/LU"
+#include <Eigen/Core>
+#include <Eigen/LU>
 
 namespace LocalStress {
   // NOTE:
