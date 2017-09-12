@@ -6,135 +6,219 @@
 #include <initializer_list>
 #include <type_traits>
 
+#define CONCATENATE(x, y) x ## y
+#define CONCAT(x, y) CONCATENATE(x, y)
+#define STRUCT_AT(t, f) CONCAT((t)-, >f)
+
+#define DEFINE_MEMBER_EXISTENCE_FUNCS(mfname)                           \
+  template <typename U>                                                 \
+  static auto CONCAT(check_, mfname)(U v) -> decltype(STRUCT_AT(&v, mfname()), std::true_type()); \
+  static auto CONCAT(check_, mfname)(...) -> decltype(std::false_type()); \
+  typedef decltype(CONCAT(check_, mfname)(std::declval<T>())) CONCAT(exist_, mfname)
+
 template <typename T>
-class isVector3 final {
-  template <typename U>
-  static auto check_x(U v) -> decltype(v.x(), std::true_type());
-  static auto check_x(...) -> decltype(std::false_type());
-
-  template <typename U>
-  static auto check_y(U v) -> decltype(v.y(), std::true_type());
-  static auto check_y(...) -> decltype(std::false_type());
-
-  template <typename U>
-  static auto check_z(U v) -> decltype(v.z(), std::true_type());
-  static auto check_z(...) -> decltype(std::false_type());
-public:
-  typedef decltype(check_x(std::declval<T>())) exist_x;
-  typedef decltype(check_y(std::declval<T>())) exist_y;
-  typedef decltype(check_z(std::declval<T>())) exist_z;
-
+struct isVector3 final {
+  DEFINE_MEMBER_EXISTENCE_FUNCS(x);
+  DEFINE_MEMBER_EXISTENCE_FUNCS(y);
+  DEFINE_MEMBER_EXISTENCE_FUNCS(z);
   static const bool value = exist_x::value && exist_y::value && exist_z::value;
 };
 
+template <typename T>
+struct isScalar final {
+  DEFINE_MEMBER_EXISTENCE_FUNCS(val);
+  static const bool value = exist_val::value;
+};
+
+#undef DEFINE_MEMBER_EXISTENCE_FUNCS
+
+template <typename T>
+struct Ops {
+  struct Add {
+    static T apply(const T l, const T r) { return l + r; }
+  };
+  struct Sub {
+    static T apply(const T l, const T r) { return l - r; }
+  };
+  struct Mul {
+    static T apply(const T l, const T r) { return l * r; }
+  };
+  struct Div {
+    static T apply(const T l, const T r) { return l / r; }
+  };
+  struct Dot {};
+  struct Cross {};
+};
+
+// scalar type
+template <typename T, class ScalarEnabled = void>
+struct Scalar;
+
+template <typename T>
+struct Scalar<T, typename std::enable_if<std::is_floating_point<T>::value>::type> final {
+  T val_;
+  Scalar(const T c) : val_(c) {}
+  template <class E>
+  Scalar(const E& r) { *this = r; }
+
+  template <class E>
+  const Scalar& operator = (const E& r) {
+    this->val_ = r.val();
+    return *this;
+  }
+
+  T& val() { return val_; }
+  const T& val() const { return val_; }
+  operator T() const { return val_; }
+};
+
+// base
+template <class L, class Op, class R, typename T,
+          class Ltt = void, class Rtt = void>
+struct Expression {
+  const L& l_;
+  const R& r_;
+  Expression(const L& l, const R& r) : l_(l), r_(r) {}
+
+  T x() const {
+    return Op::apply(l_.x(), r_.x());
+  }
+
+  T y() const {
+    return Op::apply(l_.y(), r_.y());
+  }
+
+  T z() const {
+    return Op::apply(l_.z(), r_.z());
+  }
+};
+
+template <class L, class R, typename T>
+struct Expression<L, typename Ops<T>::Cross, R, T,
+                  typename std::enable_if<isVector3<L>::value>::type,
+                  typename std::enable_if<isVector3<R>::value>::type> {
+  const L& l_;
+  const R& r_;
+  Expression(const L& l, const R& r) : l_(l), r_(r) {}
+
+  T x() const {
+    return Ops<T>::Sub::apply(Ops<T>::Mul::apply(l_.y(), r_.z()),
+                              Ops<T>::Mul::apply(l_.z(), r_.y()));
+  }
+
+  T y() const {
+    return Ops<T>::Sub::apply(Ops<T>::Mul::apply(l_.z(), r_.x()),
+                              Ops<T>::Mul::apply(l_.x(), r_.z()));
+  }
+
+  T z() const {
+    return Ops<T>::Sub::apply(Ops<T>::Mul::apply(l_.x(), r_.y()),
+                              Ops<T>::Mul::apply(l_.y(), r_.x()));
+  }
+};
+
+template <class L, class R, typename T>
+struct Expression<L, typename Ops<T>::Dot, R, T,
+                  typename std::enable_if<isVector3<L>::value>::type,
+                  typename std::enable_if<isVector3<R>::value>::type> {
+  const L& l_;
+  const R& r_;
+  Expression(const L& l, const R& r) : l_(l), r_(r) {}
+
+  T val() const {
+    return Ops<T>::Add::apply(Ops<T>::Add::apply(Ops<T>::Mul::apply(l_.x(), r_.x()),
+                                                 Ops<T>::Mul::apply(l_.y(), r_.y())),
+                              Ops<T>::Mul::apply(l_.z(), r_.z()));
+  }
+};
+
+template <class L, class Op, class R, typename T>
+struct Expression<L, Op, R, T,
+                  typename std::enable_if<isScalar<L>::value>::type,
+                  typename std::enable_if<isVector3<R>::value>::type> {
+  const L& l_;
+  const R& r_;
+  Expression(const L& l, const R& r) : l_(l), r_(r) {}
+
+  T x() const {
+    return Op::apply(l_.val(), r_.x());
+  }
+
+  T y() const {
+    return Op::apply(l_.val(), r_.y());
+  }
+
+  T z() const {
+    return Op::apply(l_.val(), r_.z());
+  }
+};
+
+template <class L, class Op, class R, typename T>
+struct Expression<L, Op, R, T,
+                  typename std::enable_if<isVector3<L>::value>::type,
+                  typename std::enable_if<isScalar<R>::value>::type> {
+  const L& l_;
+  const R& r_;
+  Expression(const L& l, const R& r) : l_(l), r_(r) {}
+
+  T x() const {
+    return Op::apply(l_.x(), r_.val());
+  }
+
+  T y() const {
+    return Op::apply(l_.y(), r_.val());
+  }
+
+  T z() const {
+    return Op::apply(l_.z(), r_.val());
+  }
+};
+
+template <class Op, class R, typename T>
+struct Expression<T, Op, R, T> {
+  const T& l_;
+  const R& r_;
+  Expression(const T& l, const R& r) : l_(l), r_(r) {}
+
+  T x() const {
+    return Op::apply(l_, r_.x());
+  }
+
+  T y() const {
+    return Op::apply(l_, r_.y());
+  }
+
+  T z() const {
+    return Op::apply(l_, r_.z());
+  }
+};
+
+template <class L, class Op, typename T>
+struct Expression<L, Op, T, T> {
+  const L& l_;
+  const T& r_;
+  Expression(const L& l, const T& r) : l_(l), r_(r) {}
+
+  T x() const {
+    return Op::apply(l_.x(), r_);
+  }
+
+  T y() const {
+    return Op::apply(l_.y(), r_);
+  }
+
+  T z() const {
+    return Op::apply(l_.z(), r_);
+  }
+};
+
+// vector type
 template <typename T, class Vec3Enabled = void>
 struct Vector3;
 
 template <typename T>
 struct Vector3<T, typename std::enable_if<std::is_floating_point<T>::value>::type> final {
   T x_, y_, z_;
-
-  struct Add {
-    static T apply(const T l, const T r) {
-      return l + r;
-    }
-  };
-
-  struct Sub {
-    static T apply(const T l, const T r) {
-      return l - r;
-    }
-  };
-
-  struct Mul {
-    static T apply(const T l, const T r) {
-      return l * r;
-    }
-  };
-
-  struct Cross {};
-
-  struct Div {
-    static T apply(const T l, const T r) {
-      return l / r;
-    }
-  };
-
-  template <class L, class Op, class R>
-  struct Expression {
-    const L& l_;
-    const R& r_;
-    Expression(const L& l, const R& r) : l_(l), r_(r) {}
-
-    T x() const {
-      return Op::apply(l_.x(), r_.x());
-    }
-
-    T y() const {
-      return Op::apply(l_.y(), r_.y());
-    }
-
-    T z() const {
-      return Op::apply(l_.z(), r_.z());
-    }
-  };
-
-  template <class L, class R>
-  struct Expression<L, Cross, R> {
-    const L& l_;
-    const R& r_;
-    Expression(const L& l, const R& r) : l_(l), r_(r) {}
-
-    T x() const {
-      return Sub::apply(Mul::apply(l_.y(), r_.z()), Mul::apply(l_.z(), r_.y()));
-    }
-
-    T y() const {
-      return Sub::apply(Mul::apply(l_.z(), r_.x()), Mul::apply(l_.x(), r_.z()));
-    }
-
-    T z() const {
-      return Sub::apply(Mul::apply(l_.x(), r_.y()), Mul::apply(l_.y(), r_.x()));
-    }
-  };
-
-  template <class Op, class R>
-  struct Expression<T, Op, R> {
-    const T& l_;
-    const R& r_;
-    Expression(const T& l, const R& r) : l_(l), r_(r) {}
-
-    T x() const {
-      return Op::apply(l_, r_.x());
-    }
-
-    T y() const {
-      return Op::apply(l_, r_.y());
-    }
-
-    T z() const {
-      return Op::apply(l_, r_.z());
-    }
-  };
-
-  template <class L, class Op>
-  struct Expression<L, Op, T> {
-    const L& l_;
-    const T& r_;
-    Expression(const L& l, const T& r) : l_(l), r_(r) {}
-
-    T x() const {
-      return Op::apply(l_.x(), r_);
-    }
-
-    T y() const {
-      return Op::apply(l_.y(), r_);
-    }
-
-    T z() const {
-      return Op::apply(l_.z(), r_);
-    }
-  };
 
   Vector3(void) : x_(0), y_(0), z_(0) {}
   explicit Vector3(const T c) : x_(c), y_(c), z_(c) {}
@@ -150,7 +234,7 @@ struct Vector3<T, typename std::enable_if<std::is_floating_point<T>::value>::typ
   Vector3(const E& r) { *this = r; }
 
   template <class E>
-    const Vector3& operator = (const E& r) {
+  const Vector3& operator = (const E& r) {
     this->x_ = r.x();
     this->y_ = r.y();
     this->z_ = r.z();
@@ -229,35 +313,35 @@ struct Vector3<T, typename std::enable_if<std::is_floating_point<T>::value>::typ
   }
 
   template <class L, class R>
-  friend Expression<L, Add, R> operator + (const L& lhs, const R& rhs) {
-    return Expression<L, Add, R>(lhs, rhs);
+  friend Expression<L, typename Ops<T>::Add, R, T> operator + (const L& lhs, const R& rhs) {
+    return Expression<L, typename Ops<T>::Add, R, T>(lhs, rhs);
   }
 
   template <class L, class R>
-  friend Expression<L, Sub, R> operator - (const L& lhs, const R& rhs) {
-    return Expression<L, Sub, R>(lhs, rhs);
+  friend Expression<L, typename Ops<T>::Sub, R, T> operator - (const L& lhs, const R& rhs) {
+    return Expression<L, typename Ops<T>::Sub, R, T>(lhs, rhs);
   }
 
   template <class L, class R>
-  friend Expression<L, Mul, R> operator * (const L& lhs, const R& rhs) {
-    return Expression<L, Mul, R>(lhs, rhs);
+  friend Expression<L, typename Ops<T>::Mul, R, T> operator * (const L& lhs, const R& rhs) {
+    return Expression<L, typename Ops<T>::Mul, R, T>(lhs, rhs);
   }
 
   template <class L, class R>
-  friend Expression<L, Div, R> operator / (const L& lhs, const R& rhs) {
-    return Expression<L, Div, R>(lhs, rhs);
-  }
-
-  // cross product
-  template <class L, class R>
-  friend Expression<L, Cross, R> operator ^ (const L& lhs, const R& rhs) {
-    return Expression<L, Cross, R>(lhs, rhs);
+  friend Expression<L, typename Ops<T>::Div, R, T> operator / (const L& lhs, const R& rhs) {
+    return Expression<L, typename Ops<T>::Div, R, T>(lhs, rhs);
   }
 
   // inner product
   template <class L, class R>
-  friend T dot(const L& lhs, const R& rhs) {
-    return lhs.x()*rhs.x() + lhs.y()*rhs.y() + lhs.z()*rhs.z();
+  friend Expression<L, typename Ops<T>::Dot, R, T> dot(const L& lhs, const R& rhs) {
+    return Expression<L, typename Ops<T>::Dot, R, T>(lhs, rhs);
+  }
+
+  // cross product
+  template <class L, class R>
+  friend Expression<L, typename Ops<T>::Cross, R, T> operator ^ (const L& lhs, const R& rhs) {
+    return Expression<L, typename Ops<T>::Cross, R, T>(lhs, rhs);
   }
 
   template <class E>

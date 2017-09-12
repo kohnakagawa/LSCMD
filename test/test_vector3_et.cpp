@@ -124,7 +124,7 @@ TEST(Operator, subeq) {
 TEST(Operator, mul_prod) {
   dvec3 d0(2.0, 4.0, 1.0);
   dvec3 d1(3.0, 4.0, -1.0);
-  const double c = dot(d0, d1);
+  const double c = static_cast<Scalar<double>>(dot(d0, d1));
   ASSERT_EQ(c, 21.0);
 }
 
