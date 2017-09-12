@@ -44,6 +44,14 @@ namespace LocalStress {
       return *this;
     }
 
+    T& operator [] (const int i) {
+      return (&xx)[i];
+    }
+
+    const T& operator [] (const int i) const {
+      return (&xx)[i];
+    }
+
     const Tensor3 operator + (const Tensor3& rhs) const {
       return Tensor3(xx + rhs.xx, xy + rhs.xy, xz + rhs.xz,
                      yx + rhs.yx, yy + rhs.yy, yz + rhs.yz,
