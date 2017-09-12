@@ -139,7 +139,6 @@ struct Vector3<T, typename std::enable_if<std::is_floating_point<T>::value>::typ
   Vector3(void) : x_(0), y_(0), z_(0) {}
   explicit Vector3(const T c) : x_(c), y_(c), z_(c) {}
   explicit Vector3(const T (&a)[3]) : x_(a[0]), y_(a[1]), z_(a[2]) {}
-  explicit Vector3(const T* a) : x_(a[0]), y_(a[1]), z_(a[2]) {}
   Vector3(const T x0, const T y0, const T z0) : x_(x0), y_(y0), z_(z0) {}
   Vector3(const Vector3& src) : x_(src.x_), y_(src.y_), z_(src.z_) {}
   Vector3(const std::initializer_list<T> ilist) {
