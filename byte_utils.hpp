@@ -61,5 +61,17 @@ namespace LocalStress {
     tmp.d = in;
     return tmp.ui;
   }
+
+  template <typename S>
+  auto conv2_lsb_first_if_needed(const S in) -> decltype(conv2uint(in)) {
+    if (is_lsb_first()) {
+      return conv2uint(in);
+    } else if (is_msb_first()) {
+      return byte_swap(conv2uint(in));
+    } else {
+      LOCAL_STRESS_ERR("Non-supported endian.");
+      return -1;
+    }
+  }
 }
 #endif

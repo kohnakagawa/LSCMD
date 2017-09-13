@@ -20,6 +20,7 @@ namespace LocalStress {
     int32_t num_frames_ = 0;
     std::vector<std::string> interaction_types_;
     std::string save_dir_ = "./";
+    bool is_saved_ = false;
 
     void normalizeStress() {
       const T factor = -1.0 / num_frames_;
@@ -41,6 +42,40 @@ namespace LocalStress {
       }
     }
 
+    void writeStressDistAsBinary(std::ofstream& fout) const {
+      const auto num_of_cell = boundary_->number_of_cell();
+
+      const auto sim_dim = conv2_lsb_first_if_needed(uint32_t(D));
+      const auto box_low = boundary_->low();
+      const auto box_len = boundary_->box_length();
+      const auto mdim    = boundary_->mesh_dim();
+      fout.write(reinterpret_cast<const char*>(&sim_dim),
+                 sizeof(uint32_t));
+      for (int32_t i = 0; i < D; i++) {
+        const auto dat = conv2_lsb_first_if_needed(box_low[i]);
+        fout.write(reinterpret_cast<const char*>(&dat), sizeof(T));
+      }
+      for (int32_t i = 0; i < D; i++) {
+        const auto dat = conv2_lsb_first_if_needed(box_len[i]);
+        fout.write(reinterpret_cast<const char*>(&dat), sizeof(T));
+      }
+      for (int32_t i = 0; i < D; i++) {
+        const auto dat = conv2_lsb_first_if_needed(mdim[i]);
+        fout.write(reinterpret_cast<const char*>(&dat), sizeof(T));
+      }
+      for (std::size_t i = 0; i < interaction_types_.size(); i++) {
+        fout.write(interaction_types_[i].c_str(),
+                   interaction_types_[i].length() * sizeof(char));
+        fout.write("\0", sizeof(char));
+        for (int32_t j = 0; j < num_of_cell; j++) {
+          for (int axis = 0; axis < D*D; axis++) {
+            const auto dat = conv2_lsb_first_if_needed(stress_dist_[i][j][axis]);
+            fout.write(reinterpret_cast<const char*>(&dat), sizeof(T));
+          }
+        }
+      }
+    }
+
   public:
     LSCalculator(const Vec_t& box_low,
                  const Vec_t& box_high,
@@ -57,7 +92,7 @@ namespace LocalStress {
     }
 
     ~LSCalculator(void) {
-      saveLocalStressDist();
+      if (!is_saved_) { saveLocalStressDist(); }
     }
 
     void setSaveDir(const std::string dir_name) {
@@ -205,58 +240,24 @@ namespace LocalStress {
       return psum;
     }
 
-    template <typename S>
-    auto convert_if_needed(const S in) -> decltype(conv2uint(in)) {
-      if (is_lsb_first()) {
-        return conv2uint(in);
-      } else if (is_msb_first()) {
-        return byte_swap(conv2uint(in));
-      } else {
-        LOCAL_STRESS_ERR("Non-supported endian.");
-        return -1;
-      }
-    }
-
-    void writeStressDistAsBinary(std::ofstream& fout) {
-      const auto num_of_cell = boundary_->number_of_cell();
-
-      const auto sim_dim = convert_if_needed(uint32_t(D));
-      const auto box_low = boundary_->low();
-      const auto box_len = boundary_->box_length();
-      const auto mdim    = boundary_->mesh_dim();
-      fout.write(reinterpret_cast<const char*>(&sim_dim),
-                 sizeof(uint32_t));
-      for (int32_t i = 0; i < D; i++) {
-        const auto dat = convert_if_needed(box_low[i]);
-        fout.write(reinterpret_cast<const char*>(&dat), sizeof(T));
-      }
-      for (int32_t i = 0; i < D; i++) {
-        const auto dat = convert_if_needed(box_len[i]);
-        fout.write(reinterpret_cast<const char*>(&dat), sizeof(T));
-      }
-      for (int32_t i = 0; i < D; i++) {
-        const auto dat = convert_if_needed(mdim[i]);
-        fout.write(reinterpret_cast<const char*>(&dat), sizeof(T));
-      }
-      for (std::size_t i = 0; i < interaction_types_.size(); i++) {
-        fout.write(interaction_types_[i].c_str(),
-                   interaction_types_[i].length() * sizeof(char));
-        fout.write("\0", sizeof(char));
-        for (int32_t j = 0; j < num_of_cell; j++) {
-          for (int axis = 0; axis < D*D; axis++) {
-            const auto dat = convert_if_needed(stress_dist_[i][j][axis]);
-            fout.write(reinterpret_cast<const char*>(&dat), sizeof(T));
-          }
-        }
-      }
-    }
-
     void saveLocalStressDist() {
+      is_saved_ = true;
       using filesystem::path;
       normalizeStress();
       const std::string fname = (path(save_dir_) / path("local_stress.bin")).filename();
       std::ofstream fout(fname, std::ios::binary);
       writeStressDistAsBinary(fout);
+    }
+
+    friend void accumulateResult(LSCalculator& lsc0,
+                                 const LSCalculator& lsc1) {
+      const int num_itypes = lsc0.interaction_types_.size();
+      const int num_of_cell = lsc0.boundary_->number_of_cell();
+      for (int type = 0; type < num_itypes; type++) {
+        for (int at = 0; at < num_of_cell; at++) {
+          lsc0.stress_dist_[type][at] += lsc1.stress_dist_[type][at];
+        }
+      }
     }
   };
 }

@@ -7,8 +7,6 @@
 #include <utility>
 #include <algorithm>
 
-// TODO: add functions for checking particles in box
-
 namespace LocalStress {
   enum class BoundaryType : int32_t {
     PERIODIC_X = 0,

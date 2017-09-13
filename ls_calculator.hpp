@@ -7,6 +7,8 @@
 #include "boundary.hpp"
 #include "f_decomposer.hpp"
 #include "ls_calculator_impl.hpp"
+#include "ls_factory.hpp"
+#include "ls_helpers.hpp"
 
 namespace LS = LocalStress;
 
