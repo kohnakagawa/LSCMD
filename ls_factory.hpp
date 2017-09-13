@@ -13,7 +13,8 @@ namespace LocalStress {
                                                    const BoundaryType btype,
                                                    std::array<int32_t, D>&& dim,
                                                    std::vector<std::string>&& itype) {
-      return make_unique<LSCalculator<T>>(box_low, box_high, btype, dim, itype);
+      return make_unique<LSCalculator<T>>(std::move(box_low), std::move(box_high), btype,
+                                          std::move(dim), std::move(itype));
     }
 
     static std::vector<std::unique_ptr<LSCalculator<T>>> createOMP(const int num_threads,
@@ -24,7 +25,8 @@ namespace LocalStress {
                                                                    std::vector<std::string>&& itype) {
       std::vector<std::unique_ptr<LSCalculator<T>>> calculators(num_threads);
       for (int i = 0; i < num_threads; i++) {
-        calculators[i] = make_unique<LSCalculator<T>>(box_low, box_high, btype, dim, itype);
+        calculators[i] = make_unique<LSCalculator<T>>(std::move(box_low), std::move(box_high), btype,
+                                                      std::move(dim), std::move(itype));
       }
       return calculators;
     }

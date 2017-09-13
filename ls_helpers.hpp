@@ -9,6 +9,10 @@ namespace LocalStress {
       accumulateResult(calculators[0], calculators[i]);
     }
     calculators[0].saveLocalStressDist();
+
+    for (int i = 0; i < num_calculators; i++) {
+      calculators[i].disableAutoSave();
+    }
   }
 
   /*

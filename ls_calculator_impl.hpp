@@ -20,7 +20,7 @@ namespace LocalStress {
     int32_t num_frames_ = 0;
     std::vector<std::string> interaction_types_;
     std::string save_dir_ = "./";
-    bool is_saved_ = false;
+    bool auto_save_ = true;
 
     void normalizeStress() {
       const T factor = -1.0 / num_frames_;
@@ -77,11 +77,11 @@ namespace LocalStress {
     }
 
   public:
-    LSCalculator(const Vec_t& box_low,
-                 const Vec_t& box_high,
+    LSCalculator(Vec_t&& box_low,
+                 Vec_t&& box_high,
                  const BoundaryType btype,
-                 const std::array<int32_t, D>& dim,
-                 const std::vector<std::string>& itype) {
+                 std::array<int32_t, D>&& dim,
+                 std::vector<std::string>&& itype) {
       boundary_ = make_unique<Boundary<T>>(btype, dim);
       boundary_->setBox(box_low, box_high);
       interaction_types_ = itype;
@@ -92,11 +92,15 @@ namespace LocalStress {
     }
 
     ~LSCalculator(void) {
-      if (!is_saved_) { saveLocalStressDist(); }
+      if (auto_save_) { saveLocalStressDist(); }
     }
 
     void setSaveDir(const std::string dir_name) {
       save_dir_ = dir_name;
+    }
+
+    void disableAutoSave() {
+      auto_save_ = false;
     }
 
     LSCalculator(const LSCalculator&) = delete;
@@ -104,24 +108,24 @@ namespace LocalStress {
     LSCalculator& operator = (const LSCalculator&) = delete;
     LSCalculator& operator = (LSCalculator&&) = delete;
 
-    void calcLocalStressPot2(const Vec_t& r0,
-                             const Vec_t& r1,
-                             const Vec_t& F0,
-                             const Vec_t& F1,
+    void calcLocalStressPot2(Vec_t&& r0,
+                             Vec_t&& r1,
+                             Vec_t&& F0,
+                             Vec_t&& F1,
                              const int32_t type) {
       LOCAL_STRESS_UNUSED_VAR(F1);
       if (boundary_->isInBox(r0) &&
           boundary_->isInBox(r1)) {
-        calcLocalStressPot2NoCheck(r0, r1, F0, F1, type);
+        calcLocalStressPot2NoCheck(std::move(r0), std::move(r1),
+                                   std::move(F0), std::move(F1),
+                                   type);
       } else {
         LOCAL_STRESS_ERR("r0 and r1 should be in simulation box.");
       }
     }
 
-    void calcLocalStressPot2NoCheck(const Vec_t& r0,
-                                    const Vec_t& r1,
-                                    const Vec_t& F0,
-                                    const Vec_t& F1,
+    void calcLocalStressPot2NoCheck(Vec_t&& r0, Vec_t&& r1,
+                                    Vec_t&& F0, Vec_t&& F1,
                                     const int32_t type) {
       LOCAL_STRESS_UNUSED_VAR(F1);
       auto dr01 = r0 - r1;
@@ -129,28 +133,22 @@ namespace LocalStress {
       spreadLocalStress(r1, dr01, F0, type);
     }
 
-    void calcLocalStressPot3(const Vec_t& r0,
-                             const Vec_t& r1,
-                             const Vec_t& r2,
-                             const Vec_t& F0,
-                             const Vec_t& F1,
-                             const Vec_t& F2,
+    void calcLocalStressPot3(Vec_t&& r0, Vec_t&& r1, Vec_t&& r2,
+                             Vec_t&& F0, Vec_t&& F1, Vec_t&& F2,
                              const int32_t type) {
       if (boundary_->isInBox(r0) &&
           boundary_->isInBox(r1) &&
           boundary_->isInBox(r2)) {
-        calcLocalStressPot3NoCheck(r0, r1, r2, F0, F1, F2, type);
+        calcLocalStressPot3NoCheck(std::move(r0), std::move(r1), std::move(r2),
+                                   std::move(F0), std::move(F1), std::move(F2),
+                                   type);
       } else {
         LOCAL_STRESS_ERR("r0, r1, and r2 should be in simulation box.");
       }
     }
 
-    void calcLocalStressPot3NoCheck(const Vec_t& r0,
-                                    const Vec_t& r1,
-                                    const Vec_t& r2,
-                                    const Vec_t& F0,
-                                    const Vec_t& F1,
-                                    const Vec_t& F2,
+    void calcLocalStressPot3NoCheck(Vec_t&& r0, Vec_t&& r1, Vec_t&& r2,
+                                    Vec_t&& F0, Vec_t&& F1, Vec_t&& F2,
                                     const int32_t type) {
       auto dr01 = r0 - r1; boundary_->applyMinimumImage(dr01);
       auto dr12 = r1 - r2; boundary_->applyMinimumImage(dr12);
@@ -161,33 +159,23 @@ namespace LocalStress {
       spreadLocalStress(r0, dr20, dF[2], type);
     }
 
-    void calcLocalStressPot4(const Vec_t& r0,
-                             const Vec_t& r1,
-                             const Vec_t& r2,
-                             const Vec_t& r3,
-                             const Vec_t& F0,
-                             const Vec_t& F1,
-                             const Vec_t& F2,
-                             const Vec_t& F3,
+    void calcLocalStressPot4(Vec_t&& r0, Vec_t&& r1, Vec_t&& r2, Vec_t&& r3,
+                             Vec_t&& F0, Vec_t&& F1, Vec_t&& F2, Vec_t&& F3,
                              const int32_t type) {
       if (boundary_->isInBox(r0) &&
           boundary_->isInBox(r1) &&
           boundary_->isInBox(r2) &&
           boundary_->isInBox(r3)) {
-        calcLocalStressPot4NoCheck(r0, r1, r2, r3, F0, F1, F2, F3, type);
+        calcLocalStressPot4NoCheck(std::move(r0), std::move(r1), std::move(r2), std::move(r3),
+                                   std::move(F0), std::move(F1), std::move(F2), std::move(F3),
+                                   type);
       } else {
         LOCAL_STRESS_ERR("r0, r1, and r2 should be in simulation box.");
       }
     }
 
-    void calcLocalStressPot4NoCheck(const Vec_t& r0,
-                                    const Vec_t& r1,
-                                    const Vec_t& r2,
-                                    const Vec_t& r3,
-                                    const Vec_t& F0,
-                                    const Vec_t& F1,
-                                    const Vec_t& F2,
-                                    const Vec_t& F3,
+    void calcLocalStressPot4NoCheck(Vec_t&& r0, Vec_t&& r1, Vec_t&& r2, Vec_t&& r3,
+                                    Vec_t&& F0, Vec_t&& F1, Vec_t&& F2, Vec_t&& F3,
                                     const int32_t type) {
       auto dr01 = r0 - r1; boundary_->applyMinimumImage(dr01);
       auto dr02 = r0 - r2; boundary_->applyMinimumImage(dr02);
@@ -204,8 +192,8 @@ namespace LocalStress {
       spreadLocalStress(r3, dr23, dF[5], type);
     }
 
-    void calcLocalStressKin(const Vec_t& r,
-                            const Vec_t& v,
+    void calcLocalStressKin(Vec_t&& r,
+                            Vec_t&& v,
                             const T mass,
                             const int32_t type) {
       if (boundary_->isInBox(r)) {
@@ -241,7 +229,6 @@ namespace LocalStress {
     }
 
     void saveLocalStressDist() {
-      is_saved_ = true;
       using filesystem::path;
       normalizeStress();
       const std::string fname = (path(save_dir_) / path("local_stress.bin")).filename();
