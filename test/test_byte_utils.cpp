@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include <cstdint>
-#include "../byte_utils.hpp"
+#include "../ls_calculator.hpp"
 
 using namespace LocalStress;
 
