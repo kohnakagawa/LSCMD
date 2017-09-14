@@ -1,0 +1,27 @@
+language: cpp
+
+sudo:
+    - required
+
+os:
+  - linux
+
+compiler:
+  - g++
+  - clang++
+
+branches:
+  only:
+    - master
+
+before_install:
+  - sudo apt install libeigen3-dev libeigen3-doc
+  - sudo apt install libgtest-dev
+
+install:
+  - cd test
+  - cmake .
+  - make
+
+script:
+  - ./ci.sh
