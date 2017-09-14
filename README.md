@@ -1,6 +1,6 @@
+[![Build Status](https://travis-ci.org/kohnakagawa/md_local_stress.svg?branch=master)](https://travis-ci.org/kohnakagawa/md_local_stress)
 MDLScalculator
 =============
-[![Build Status](https://travis-ci.org/kohnakagawa/md_local_stress.svg?branch=master)](https://travis-ci.org/kohnakagawa/md_local_stress)
 A local stress calculation library for molecular dynamics simulations written in C++11.
 (This software is currently in the beta stage.)
 
