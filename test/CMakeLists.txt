@@ -4,6 +4,7 @@ set(CMAKE_VERBOSE_MAKEFILE 1)
 # NOTE: specify google test directory path
 include_directories(./googletest/googletest/include/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
+include_directories(/usr/include/eigen3)
 link_directories(${CMAKE_CURRENT_SOURCE_DIR}/googletest/build/googlemock/gtest/)
 
 set(CMAKE_BUILD_TYPE Debug)
