@@ -20,6 +20,7 @@ branches:
 before_install:
   - sudo apt install libeigen3-dev libeigen3-doc
   - sudo apt install libgtest-dev
+  - "cd /usr/src/gtest && sudo cmake . && sudo cmake --build . && sudo mv libg* /usr/local/lib ; cd ~"
 
 install:
   - cd test
