@@ -13,7 +13,7 @@ namespace LocalStress {
   }
 
   uint32_t byte_swap(const int in) {
-    return byte_swap(in);
+    return byte_swap((uint32_t)in);
   }
 
   uint32_t byte_swap(const uint32_t in) {

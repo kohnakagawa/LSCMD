@@ -103,6 +103,6 @@ TEST(Fdecompose, four_body) {
   for (std::size_t i = 0; i < num_pair; i++) {
     const auto dr_norm = dr[i].norm();
     const auto dF_norm = dF[i].norm();
-    ASSERT_NEAR(dF[i] * dr[i], dr_norm * dF_norm, err_fp);
+    ASSERT_NEAR(std::abs(dF[i] * dr[i]), std::abs(dr_norm * dF_norm), err_fp);
   }
 }
