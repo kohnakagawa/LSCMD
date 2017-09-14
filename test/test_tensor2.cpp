@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "../ls_calculator.hpp"
+#include "../tensor2.hpp"
 
 using namespace LocalStress;
 
