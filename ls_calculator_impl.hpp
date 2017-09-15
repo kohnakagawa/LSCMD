@@ -218,7 +218,8 @@ namespace LocalStress {
 
     const Tensor_t pressure_tot(void) const {
       Tensor_t psum(0.0);
-      for (std::size_t i = 0; i < stress_dist_.size(); i++) {
+      const auto num_itypes = interaction_types_.size();
+      for (std::size_t i = 0; i < num_itypes; i++) {
         psum += pressure_tot(i);
       }
       return psum;
