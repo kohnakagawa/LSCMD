@@ -3,15 +3,32 @@
 
 namespace LocalStress {
   template <typename T>
-  void saveLocalStressDistOMP(std::vector<std::unique_ptr<LSCalculator<T>>>& calculators) {
+  void accumulateStressOMP(std::vector<std::unique_ptr<LSCalculator<T>>>& calculators) {
     const int num_calculators = calculators.size();
     for (int i = 1; i < num_calculators; i++) {
-      accumulateResult(calculators[0], calculators[i]);
+      accumulateResult(*calculators[0], *calculators[i]);
     }
-    calculators[0].saveLocalStressDist();
+  }
 
-    for (int i = 0; i < num_calculators; i++) {
-      calculators[i].disableAutoSave();
+  template <typename T>
+  void showPressureTotalOMP(std::vector<std::unique_ptr<LSCalculator<T>>>& calculators) {
+    accumulateStressOMP(calculators);
+    std::cout << "pressure total = " << calculators[0]->pressure_tot().trace() / 3.0 << std::endl;
+  }
+
+  template <typename T>
+  void saveLocalStressDistOMP(std::vector<std::unique_ptr<LSCalculator<T>>>& calculators) {
+    accumulateStressOMP(calculators);
+    calculators[0]->saveLocalStressDist();
+    for (auto& calc : calculators) {
+      calc->disableAutoSave();
+    }
+  }
+
+  template <typename T>
+  void clearLSCalculatorsOMP(std::vector<std::unique_ptr<LSCalculator<T>>>& calculators) {
+    for (auto& calc : calculators) {
+      calc->clear();
     }
   }
 

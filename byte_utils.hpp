@@ -1,22 +1,24 @@
 #if !defined BYTE_MANIP_HPP
 #define BYTE_MANIP_HPP
 
+#include <fstream>
+
 namespace LocalStress {
-  bool is_lsb_first(void) {
+  static inline bool is_lsb_first(void) {
     const int16_t s = 0x1234;
     return (*(int8_t*)&s == 0x34);
   }
 
-  bool is_msb_first(void) {
+  static inline bool is_msb_first(void) {
     const int16_t s = 0x1234;
     return (*(int8_t*)&s == 0x12);
   }
 
-  uint32_t byte_swap(const int in) {
+  static inline uint32_t byte_swap(const int in) {
     return byte_swap((uint32_t)in);
   }
 
-  uint32_t byte_swap(const uint32_t in) {
+  static inline uint32_t byte_swap(const uint32_t in) {
     return
       ((in & 0x000000ff) << 24) |
       ((in & 0x0000ff00) <<  8) |
@@ -24,7 +26,7 @@ namespace LocalStress {
       ((in & 0xff000000) >> 24);
   }
 
-  uint64_t byte_swap(const uint64_t in) {
+  static inline uint64_t byte_swap(const uint64_t in) {
     return
       ((in & 0x00000000000000ff) << 56) |
       ((in & 0x000000000000ff00) << 40) |
@@ -36,15 +38,15 @@ namespace LocalStress {
       ((in & 0xff00000000000000) >> 56);
   }
 
-  uint32_t conv2uint(const uint32_t in) {
+  static inline uint32_t conv2uint(const uint32_t in) {
     return in;
   }
 
-  uint32_t conv2uint(const int in) {
+  static inline uint32_t conv2uint(const int in) {
     return in;
   }
 
-  uint32_t conv2uint(const float in) {
+  static inline uint32_t conv2uint(const float in) {
     union {
       float f;
       uint32_t ui;
@@ -53,7 +55,7 @@ namespace LocalStress {
     return tmp.ui;
   }
 
-  uint64_t conv2uint(const double in) {
+  static inline uint64_t conv2uint(const double in) {
     union {
       double d;
       uint64_t ui;
@@ -72,6 +74,18 @@ namespace LocalStress {
       LOCAL_STRESS_ERR("Non-supported endian.");
       return -1;
     }
+  }
+
+  template <typename T>
+  static inline void write_as_lsbfirst(std::ofstream& fout,
+                                       const T in) {
+    const auto dat = conv2_lsb_first_if_needed(in);
+    fout.write(reinterpret_cast<const char*>(&dat), sizeof(T));
+  }
+
+  template <>
+  void write_as_lsbfirst<std::string>(std::ofstream& fout, const std::string in) {
+    fout.write(in.c_str(), in.length() * sizeof(char));
   }
 }
 #endif

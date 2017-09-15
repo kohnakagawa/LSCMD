@@ -1,7 +1,6 @@
 #if !defined LS_CALCULATOR_IMPL_HPP
 #define LS_CALCULATOR_IMPL_HPP
 
-#include <fstream>
 #include <string>
 
 #include "filesystem/path.h"
@@ -43,34 +42,31 @@ namespace LocalStress {
     }
 
     void writeStressDistAsBinary(std::ofstream& fout) const {
-      const auto num_of_cell = boundary_->number_of_cell();
+      write_as_lsbfirst(fout, uint32_t(D));
 
-      const auto sim_dim = conv2_lsb_first_if_needed(uint32_t(D));
       const auto box_low = boundary_->low();
+      for (int32_t i = 0; i < D; i++) {
+        write_as_lsbfirst(fout, box_low[i]);
+      }
       const auto box_len = boundary_->box_length();
+      for (int32_t i = 0; i < D; i++) {
+        write_as_lsbfirst(fout, box_len[i]);
+      }
       const auto mdim    = boundary_->mesh_dim();
-      fout.write(reinterpret_cast<const char*>(&sim_dim),
-                 sizeof(uint32_t));
       for (int32_t i = 0; i < D; i++) {
-        const auto dat = conv2_lsb_first_if_needed(box_low[i]);
-        fout.write(reinterpret_cast<const char*>(&dat), sizeof(T));
+        write_as_lsbfirst(fout, mdim[i]);
       }
-      for (int32_t i = 0; i < D; i++) {
-        const auto dat = conv2_lsb_first_if_needed(box_len[i]);
-        fout.write(reinterpret_cast<const char*>(&dat), sizeof(T));
-      }
-      for (int32_t i = 0; i < D; i++) {
-        const auto dat = conv2_lsb_first_if_needed(mdim[i]);
-        fout.write(reinterpret_cast<const char*>(&dat), sizeof(T));
-      }
-      for (std::size_t i = 0; i < interaction_types_.size(); i++) {
-        fout.write(interaction_types_[i].c_str(),
-                   interaction_types_[i].length() * sizeof(char));
-        fout.write("\0", sizeof(char));
+
+      const auto num_of_cell = boundary_->number_of_cell();
+      const auto num_itypes  = interaction_types_.size();
+      write_as_lsbfirst(fout, uint32_t(num_itypes));
+      for (std::size_t i = 0; i < num_itypes; i++) {
+        const auto itype_name_len = uint32_t(interaction_types_[i].length());
+        write_as_lsbfirst(fout, itype_name_len);
+        write_as_lsbfirst(fout, interaction_types_[i]);
         for (int32_t j = 0; j < num_of_cell; j++) {
           for (int axis = 0; axis < D*D; axis++) {
-            const auto dat = conv2_lsb_first_if_needed(stress_dist_[i][j][axis]);
-            fout.write(reinterpret_cast<const char*>(&dat), sizeof(T));
+            write_as_lsbfirst(fout, stress_dist_[i][j][axis]);
           }
         }
       }
