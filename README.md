@@ -79,11 +79,7 @@ Observer::local_pressure(Variables *vars) {
 * sample/mdstep/local\_stress\_omp/observer.cpp
 
 ``` c++
-
-#include "observer.hpp"
-
-...
-
+//------------------------------------------------------------------------
 Observer::Observer() {
   lscalculators = LS::CalculatorFactory<double>::createOMP(omp_get_max_threads(),
                                                            {0.0, 0.0, 0.0}, {Lx, Ly, Lz},
