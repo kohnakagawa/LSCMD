@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/kohnakagawa/md_local_stress.svg?branch=master)](https://travis-ci.org/kohnakagawa/md_local_stress)
+[![codecov](https://codecov.io/gh/kohnakagawa/md_local_stress/branch/master/graph/badge.svg)](https://codecov.io/gh/kohnakagawa/md_local_stress)
 
 MDLScalculator
 =============
