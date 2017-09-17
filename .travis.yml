@@ -29,3 +29,7 @@ install:
 
 script:
   - ./ci.sh
+  - ./get_code_cov.sh
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
