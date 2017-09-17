@@ -26,7 +26,6 @@ namespace LocalStress {
     return {dF01 * dr_u[0], dF12 * dr_u[1], dF02 * dr_u[2]};
   }
 
-
 #define VEC_TO_MAT(M, i, j, v)                  \
   do {                                          \
     for (int32_t axis = 0; axis < D; axis++) {  \

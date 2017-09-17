@@ -95,7 +95,7 @@ namespace LocalStress {
       save_dir_ = dir_name;
     }
 
-    void disableAutoSave() {
+    void disableAutoSave(void) {
       auto_save_ = false;
     }
 
@@ -225,7 +225,7 @@ namespace LocalStress {
       return psum;
     }
 
-    void saveLocalStressDist() {
+    void saveLocalStressDist(void) {
       using filesystem::path;
       normalizeStress();
       const std::string fname = (path(save_dir_) / path("local_stress.bin")).filename();

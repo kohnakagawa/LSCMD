@@ -6,7 +6,7 @@ namespace LocalStress {
   class CalculatorFactory;
 
   template <typename T>
-  class CalculatorFactory<T, typename std::enable_if<std::is_floating_point<T>::value>::type> {
+  class CalculatorFactory<T, typename std::enable_if<std::is_floating_point<T>::value>::type> final {
   public:
     static std::unique_ptr<LSCalculator<T>> create(Vec<T>&& box_low,
                                                    Vec<T>&& box_high,

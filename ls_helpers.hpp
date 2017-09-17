@@ -7,7 +7,7 @@ namespace LocalStress {
   };
 
   template <typename T>
-  class LSHelpers {
+  class LSHelpers final {
     static void accumulateRootCalculator(std::vector<std::unique_ptr<LSCalculator<T>>>& calculators) {
       const int num_calculators = calculators.size();
       for (int i = 0; i < num_calculators; i++) {
