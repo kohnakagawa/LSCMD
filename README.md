@@ -16,7 +16,7 @@ A local stress calculation library for molecular dynamics simulations written in
 ## Examples
 ### Example 1
 
-* sample/mdstep/step6.5/observer.cpp
+* sample/mdstep/local_stress/observer.cpp
 
 ```c++
 #include "ls_calculator.hpp"
@@ -24,40 +24,131 @@ A local stress calculation library for molecular dynamics simulations written in
 ...
 
 void
-Observer::local_pressure(Variables *vars, std::vector<Pair> &pairs) {
-  // specify box type and space division
-  static LS::LSCalculator<double> lscalculator({0.0, 0.0, 0.0}, {Lx, Ly, Lz},
-                                               LS::BoundaryType::PERIODIC_XYZ,
-                                               {1, 1, 160});
+Observer::local_pressure(Variables *vars) {
   Atom *atoms = vars->atoms.data();
-  // calculate kinetic term of local stress
+  const double mass = 1.0;
+  static auto lscalculator = LS::CalculatorFactory<double>::create({0.0, 0.0, 0.0}, {Lx, Ly, Lz},
+                                                                   LS::BoundaryType::PERIODIC_XYZ,
+                                                                   {1, 1, 240},
+                                                                   {"Kinetic", "LJ"});
+  // kinetic term
   const int N = vars->number_of_atoms();
   for (int k = 0; k < N; k++) {
-    lscalculator.calcLocalStressKin({atoms[k].qx, atoms[k].qy, atoms[k].qz},
-                                    {atoms[k].px, atoms[k].py, atoms[k].pz},
-                                    1.0);
+    lscalculator->calcLocalStressKin({atoms[k].qx, atoms[k].qy, atoms[k].qz},
+                                     {atoms[k].px, atoms[k].py, atoms[k].pz},
+                                     mass,
+                                     0);
   }
 
-  // calculate potential term of local stress
-  const int pp = pairs.size();
-  for (int k = 0; k < pp; k++) {
-    const int i = pairs[k].i;
-    const int j = pairs[k].j;
-    double dx = atoms[j].qx - atoms[i].qx;
-    double dy = atoms[j].qy - atoms[i].qy;
-    double dz = atoms[j].qz - atoms[i].qz;
-    adjust_periodic(dx, dy, dz);
-    double r2 = (dx * dx + dy * dy + dz * dz);
-    if (r2 > CL2) continue;
-    double r6 = r2 * r2 * r2;
-    double df = (24.0 * r6 - 48.0) / (r6 * r6 * r2);
-    lscalculator.calcLocalStressPot2({atoms[j].qx, atoms[j].qy, atoms[j].qz},
-                                     {atoms[i].qx, atoms[i].qy, atoms[i].qz},
-                                     {-df * dx, -df * dy, -df * dz});
+  // potential term
+  const int *neighbor_list = vars->neighbor_list.data();
+  const int *i_position    = vars->i_position.data();
+  const int *j_count       = vars->j_count.data();
+  for (int i = 0; i < N; i++) {
+    const double qix = atoms[i].qx;
+    const double qiy = atoms[i].qy;
+    const double qiz = atoms[i].qz;
+    const int ip = i_position[i];
+    for (int k = 0; k < j_count[i]; k++) {
+      const int j = neighbor_list[ip + k];
+      const double qjx = atoms[j].qx;
+      const double qjy = atoms[j].qy;
+      const double qjz = atoms[j].qz;
+      double dx = qjx - qix;
+      double dy = qjy - qiy;
+      double dz = qjz - qiz;
+      adjust_periodic(dx, dy, dz);
+      const double r2 = (dx * dx + dy * dy + dz * dz);
+      if (r2 > CL2)continue;
+      const double r6 = r2 * r2 * r2;
+      const double df = (24.0 * r6 - 48.0) / (r6 * r6 * r2);
+      lscalculator->calcLocalStressPot2NoCheck({qix, qiy, qiz},
+                                               {qjx, qjy, qjz},
+                                               {df * dx, df * dy, df * dz},
+                                               {-df * dx, -df * dy, -df * dz},
+                                               1);
+    }
   }
+  lscalculator->nextStep();
+}
 
-  // save
-  lscalculator.nextStep();
+```
+
+### Example 2
+
+* sample/mdstep/local\_stress\_omp/observer.cpp
+
+``` c++
+
+#include "observer.hpp"
+
+...
+
+Observer::Observer() {
+  lscalculators = LS::CalculatorFactory<double>::createOMP(omp_get_max_threads(),
+                                                           {0.0, 0.0, 0.0}, {Lx, Ly, Lz},
+                                                           LS::BoundaryType::PERIODIC_XYZ,
+                                                           {1, 1, 240},
+                                                           {"Kinetic", "LJ"});
+}
+//------------------------------------------------------------------------
+Observer::~Observer() {
+  LS::LSHelpers<double>::saveLocalStressDistOMP(lscalculators);
+}
+//------------------------------------------------------------------------
+
+...
+
+void
+Observer::local_pressure(Variables *vars) {
+  Atom *atoms = vars->atoms.data();
+  const double mass = 1.0;
+
+#pragma omp parallel
+  {
+    // kinetic term
+    const auto tid = omp_get_thread_num();
+    const int N = vars->number_of_atoms();
+#pragma omp for nowait
+    for (int k = 0; k < N; k++) {
+      lscalculators[tid]->calcLocalStressKin({atoms[k].qx, atoms[k].qy, atoms[k].qz},
+                                             {atoms[k].px, atoms[k].py, atoms[k].pz},
+                                             mass,
+                                             0);
+    }
+
+    // potential term
+    const int *neighbor_list = vars->neighbor_list.data();
+    const int *i_position    = vars->i_position.data();
+    const int *j_count       = vars->j_count.data();
+#pragma omp for nowait
+    for (int i = 0; i < N; i++) {
+      const double qix = atoms[i].qx;
+      const double qiy = atoms[i].qy;
+      const double qiz = atoms[i].qz;
+      const int ip = i_position[i];
+      for (int k = 0; k < j_count[i]; k++) {
+        const int j = neighbor_list[ip + k];
+        const double qjx = atoms[j].qx;
+        const double qjy = atoms[j].qy;
+        const double qjz = atoms[j].qz;
+        double dx = qjx - qix;
+        double dy = qjy - qiy;
+        double dz = qjz - qiz;
+        adjust_periodic(dx, dy, dz);
+        const double r2 = (dx * dx + dy * dy + dz * dz);
+        if (r2 > CL2)continue;
+        const double r6 = r2 * r2 * r2;
+        const double df = (24.0 * r6 - 48.0) / (r6 * r6 * r2);
+        lscalculators[tid]->calcLocalStressPot2NoCheck({qix, qiy, qiz},
+                                                       {qjx, qjy, qjz},
+                                                       {df * dx, df * dy, df * dz},
+                                                       {-df * dx, -df * dy, -df * dz},
+                                                       1);
+      }
+    }
+    lscalculators[tid]->nextStep();
+  }
 }
 
 ```
