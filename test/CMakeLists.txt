@@ -16,23 +16,23 @@ set(GTEST_LINK_LIBS gtest_main gtest pthread)
 set(GCOV_LINK_LIBS gcov)
 set(LINK_LIBS ${GCOV_LINK_LIBS} ${GTEST_LINK_LIBS})
 
-add_executable(vector3_test.out test_vector3.cpp)
-target_link_libraries(vector3_test.out ${LINK_LIBS})
+add_executable(vector3_test test_vector3.cpp)
+target_link_libraries(vector3_test ${LINK_LIBS})
 
-add_executable(vector2_test.out test_vector2.cpp)
-target_link_libraries(vector2_test.out ${LINK_LIBS})
+add_executable(vector2_test test_vector2.cpp)
+target_link_libraries(vector2_test ${LINK_LIBS})
 
-add_executable(tensor3_test.out test_tensor3.cpp)
-target_link_libraries(tensor3_test.out ${LINK_LIBS})
+add_executable(tensor3_test test_tensor3.cpp)
+target_link_libraries(tensor3_test ${LINK_LIBS})
 
-add_executable(tensor2_test.out test_tensor2.cpp)
-target_link_libraries(tensor2_test.out ${LINK_LIBS})
+add_executable(tensor2_test test_tensor2.cpp)
+target_link_libraries(tensor2_test ${LINK_LIBS})
 
-add_executable(f_decomposer_test.out test_f_decomposer.cpp)
-target_link_libraries(f_decomposer_test.out ${LINK_LIBS})
+add_executable(f_decomposer_test test_f_decomposer.cpp)
+target_link_libraries(f_decomposer_test ${LINK_LIBS})
 
-add_executable(boundary_test.out test_boundary.cpp)
-target_link_libraries(boundary_test.out ${LINK_LIBS})
+add_executable(boundary_test test_boundary.cpp)
+target_link_libraries(boundary_test ${LINK_LIBS})
 
-add_executable(byte_utils_test.out test_byte_utils.cpp)
-target_link_libraries(byte_utils_test.out ${LINK_LIBS})
+add_executable(byte_utils_test test_byte_utils.cpp)
+target_link_libraries(byte_utils_test ${LINK_LIBS})
