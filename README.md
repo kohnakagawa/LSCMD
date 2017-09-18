@@ -7,8 +7,8 @@ A local stress calculation library for molecular dynamics simulations written in
 (This software is currently in the beta stage.)
 
 ## Supported methods
-* Irving-Kirkwood-Noll procedure for pairwise forces.
-* Central Force Decomposition (CFD) for 3,4 body forces.
+* Irving-Kirkwood-Noll (IKN) procedure for pairwise forces.
+* Central Force Decomposition (CFD) for multi-body (3 and 4) forces.
 
 ## Dependency
 * [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page)
