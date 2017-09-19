@@ -1,9 +1,9 @@
-[![Build Status](https://travis-ci.org/kohnakagawa/MDLSC.svg?branch=master)](https://travis-ci.org/kohnakagawa/MDLSC)
-[![codecov](https://codecov.io/gh/kohnakagawa/MDLSC/branch/master/graph/badge.svg)](https://codecov.io/gh/kohnakagawa/MDLSC)
+[![Build Status](https://travis-ci.org/kohnakagawa/LSCMD.svg?branch=master)](https://travis-ci.org/kohnakagawa/LSCMD)
+[![codecov](https://codecov.io/gh/kohnakagawa/LSCMD/branch/master/graph/badge.svg)](https://codecov.io/gh/kohnakagawa/LSCMD)
 
-MDLSC (Molecular Dynamics Local Stress Calculator)
+LSCMD (Local Stress Calculator for Molecular Dynamics simulations)
 =============
-MDLSC is a local stress calculation library for molecular dynamics simulations written in C++11.
+LSCMD is a local stress calculation library for molecular dynamics simulations written in C++11.
 (This software is currently in the beta stage.)
 
 ## Supported methods
@@ -19,7 +19,7 @@ MDLSC is a local stress calculation library for molecular dynamics simulations w
 * sample/mdstep/local_stress/observer.cpp
 
 ```c++
-#include "MDLSC/ls_calculator.hpp"
+#include "LSCMD/ls_calculator.hpp"
 
 ...
 
@@ -79,7 +79,7 @@ Observer::local_pressure(Variables *vars) {
 * sample/mdstep/local\_stress\_omp/observer.cpp
 
 ``` c++
-#include "MDLSC/ls_calculator.hpp"
+#include "LSCMD/ls_calculator.hpp"
 
 ...
 
