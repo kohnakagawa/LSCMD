@@ -51,7 +51,7 @@ TEST(Fdecompose, three_body) {
 TEST(Fdecompose, four_body) {
   constexpr std::size_t num_body = 4;
   constexpr std::size_t num_pair = num_body * (num_body - 1) / 2;
-  constexpr double err_fp = 1.0e-14;
+  constexpr double err_fp = 1.0e-13;
 
   Vector3<double> r0 {0.0,  0.0,  0.0};
   Vector3<double> r1 {0.0,  1.0,  2.0};
