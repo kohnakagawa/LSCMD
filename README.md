@@ -19,7 +19,7 @@ MDLSC is a local stress calculation library for molecular dynamics simulations w
 * sample/mdstep/local_stress/observer.cpp
 
 ```c++
-#include "ls_calculator.hpp"
+#include "MDLSC/ls_calculator.hpp"
 
 ...
 
@@ -79,6 +79,10 @@ Observer::local_pressure(Variables *vars) {
 * sample/mdstep/local\_stress\_omp/observer.cpp
 
 ``` c++
+#include "MDLSC/ls_calculator.hpp"
+
+...
+
 //------------------------------------------------------------------------
 Observer::Observer() {
   lscalculators = LS::CalculatorFactory<double>::createOMP(omp_get_max_threads(),
