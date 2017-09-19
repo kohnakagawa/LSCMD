@@ -1,9 +1,9 @@
-[![Build Status](https://travis-ci.org/kohnakagawa/md_local_stress.svg?branch=master)](https://travis-ci.org/kohnakagawa/md_local_stress)
-[![codecov](https://codecov.io/gh/kohnakagawa/md_local_stress/branch/master/graph/badge.svg)](https://codecov.io/gh/kohnakagawa/md_local_stress)
+[![Build Status](https://travis-ci.org/kohnakagawa/MDLSC.svg?branch=master)](https://travis-ci.org/kohnakagawa/MDLSC)
+[![codecov](https://codecov.io/gh/kohnakagawa/MDLSC/branch/master/graph/badge.svg)](https://codecov.io/gh/kohnakagawa/MDLSC)
 
-MDLScalculator
+MDLSC (Molecular Dynamics Local Stress Calculator)
 =============
-A local stress calculation library for molecular dynamics simulations written in C++11.
+MDLSC is a local stress calculation library for molecular dynamics simulations written in C++11.
 (This software is currently in the beta stage.)
 
 ## Supported methods
